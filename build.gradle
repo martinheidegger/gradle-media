@@ -1,0 +1,10 @@
+apply plugin: 'groovy'
+apply plugin: 'java'
+
+
+dependencies {
+	compile gradleApi()
+	groovy localGroovy()
+}
+
+srcDirs = ['src/main/java', 'java-image-scaling-0.8.5.jar']
