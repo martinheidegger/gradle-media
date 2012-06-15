@@ -1,12 +1,8 @@
 package at.leichtgewicht.gradle
 
 import static org.junit.Assert.*;
-import groovy.mock.interceptor.MockFor;
 
 import org.gradle.api.Project;
-import org.gradle.testfixtures.ProjectBuilder;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import at.leichtgewicht.gradle.task.ClearImagingTask;
@@ -28,32 +24,44 @@ class ImagingTest extends AbstractProjectTest {
 		}
 	}
 	
-	private fullTest() {
-		project.imaging {
-			output = 'build/images'
-			input = 'images'
-			
-			def largeThumbs = resize {
-				width = 300
+	@Test
+	void fullTest() {
+		boolean executed = false
+		Closure setup = {
+			tasks.processImages << {
+				
+				def largeThumbs = resize {
+					width = 300
+				}
+				
+				def smallThumbs = resize {
+					input = largeThumbs // Faster than default input (because the largeThumbs will all have been loaded & resized already)
+					width = 150
+				}
+				
+				save {
+					input = largeThumbs
+					namePattern = {File file -> "largeThumbs/{file.name}.jpg"}
+				}
+				
+				saveAsGrid {
+					input = smallThumbs
+					maxWidth = 700
+					maxHeight = 300
+					namePattern = {File file -> "smallThumbs/{file.name}.jpg" }
+					outputFormat = JPEG({
+						quality = 75
+					})
+					info = 'smallThumbs.json'
+				}
+				
+//				clone {
+//					namePattern = {File file -> "original/{file.name}.jpg" }
+//				}
 			}
-			def smallThumbs = resize {
-				images = largeThumbs
-				width = 150
-			}
-			save {
-				images = largeThumbs
-				name = {File file -> "largeThumbs/{file.name}.jpg" }
-			}
-			saveAsGrid {
-				images = smallThumbs
-				maxWidth = 700
-				maxHeight = 300
-				name = {File file -> "smallThumbs/{file.name}.jpg" }
-				format = JPEG({
-					quality = 75
-				})
-				info = 'smallThumbs.json'
-			}
+			tasks.processImages.execute();
 		}
+		setup.delegate = project
+		setup.call()
 	}
 } 
