@@ -10,8 +10,8 @@ import javax.imageio.IIOImage
 import javax.imageio.ImageWriter
 import javax.imageio.stream.FileImageOutputStream
 
-import at.leichtgewicht.gradle.ImageMeta
-import at.leichtgewicht.gradle.ImagingProcess
+import at.leichtgewicht.gradle.MediaMeta
+import at.leichtgewicht.gradle.MediaProcess
 import at.leichtgewicht.gradle.process.format.JpegFormat
 import at.leichtgewicht.gradle.util.FileUtil;
 
@@ -20,7 +20,7 @@ import org.gradle.api.Task
 import org.gradle.api.file.FileCollection
 import static at.leichtgewicht.gradle.util.LangUtil.configure
 
-class SaveProcess extends AbstractImagingProcess implements ImagingProcess {
+class SaveProcess extends AbstractMediaProcess implements MediaProcess {
 	
 	private static def logger = Logger.getLogger('SaveProcess')
 	
@@ -40,7 +40,7 @@ class SaveProcess extends AbstractImagingProcess implements ImagingProcess {
 	}
 	
 	@Override
-	public void execute(Task task, ImageMeta meta) {
+	public void execute(Task task, MediaMeta meta) {
 		
 		File file = prepareFile(task, meta)
 		JpegFormat format = getOutputFormat(meta, file.name)
@@ -50,7 +50,7 @@ class SaveProcess extends AbstractImagingProcess implements ImagingProcess {
 		saveFile(format, meta.lastImage, file)
 	}
 	
-	protected File prepareFile(Task task, ImageMeta meta) {
+	protected File prepareFile(Task task, MediaMeta meta) {
 		File file = resolveFile(task, meta)
 		file.parentFile.mkdirs()
 		return file
@@ -71,7 +71,7 @@ class SaveProcess extends AbstractImagingProcess implements ImagingProcess {
 		count++
 	}
 	
-	File resolveFile(Task task, ImageMeta meta) {
+	File resolveFile(Task task, MediaMeta meta) {
 		if( namePattern == null ) {
 			throw new RuntimeException("You need to define a output pattern for ${task}")
 		}

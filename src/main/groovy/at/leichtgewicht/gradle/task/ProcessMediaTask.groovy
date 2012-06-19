@@ -16,21 +16,21 @@ import org.jgrapht.alg.BlockCutpointGraph.BCGEdge;
 import org.jgrapht.graph.DefaultDirectedGraph
 import org.jgrapht.graph.DefaultEdge
 
-import at.leichtgewicht.gradle.ImageMeta
-import at.leichtgewicht.gradle.ImagingProcess
+import at.leichtgewicht.gradle.MediaMeta
+import at.leichtgewicht.gradle.MediaProcess
 import at.leichtgewicht.gradle.process.ProcessInfo
 import at.leichtgewicht.gradle.process.ResizeProcess
 import at.leichtgewicht.gradle.process.SaveAsGridProcess
 import at.leichtgewicht.gradle.process.SaveProcess
 
-class ProcessImagingTask extends DefaultTask {
+class ProcessMediaTask extends DefaultTask {
 	
 	protected static CycleDetector<Object, DefaultEdge> detector = new CycleDetector<Object, DefaultEdge>()
 	
-	protected ArrayList<ImagingProcess> processes = new ArrayList<ImagingProcess>()
+	protected ArrayList<MediaProcess> processes = new ArrayList<MediaProcess>()
 	protected DirectedGraph<Object, DefaultEdge> dependencyGraph = null
 	protected Set<FileCollection> dataInput = null
-	protected ImageMeta meta = new ImageMeta()
+	protected MediaMeta meta = new MediaMeta()
 	protected ProcessInfo processInfo = new ProcessInfo()
 	
 	@TaskAction
@@ -86,7 +86,7 @@ class ProcessImagingTask extends DefaultTask {
 	
 	protected void fillGraph() {
 		logger.debug "Found ${processes.size()} processes to work with"
-		processes.each { ImagingProcess process ->
+		processes.each { MediaProcess process ->
 			def input = getInput(process)
 			if( input != null && input instanceof FileCollection ) {
 				dataInput.add(input)
@@ -101,14 +101,14 @@ class ProcessImagingTask extends DefaultTask {
 		}
 	}
 	
-	protected def getInput(ImagingProcess process) {
+	protected def getInput(MediaProcess process) {
 		if( process.input != null ) {
 			logger.info "Taking custom input ${process.input} for ${process}"
 			return process.input
 		}
-		if( project.imaging.input ) {
+		if( project.media.input ) {
 			logger.info "Using Images from project.imaging setting"
-			return project.imaging.input
+			return project.media.input
 		}
 		def folder = project.file('images')
 		def images = project.fileTree(dir: 'images', include: '**/*')
@@ -144,7 +144,7 @@ class ProcessImagingTask extends DefaultTask {
 	
 	protected def executeProcess(something, String parentName) {
 		if( assertThatInputIsProper(something) ) {
-			ImagingProcess process = something
+			MediaProcess process = something
 			meta.setLastName(parentName)
 			process.execute(this, meta)
 			executeRelatedProcesses(process, process.name != null ? process.name : parentName, meta)
@@ -154,10 +154,10 @@ class ProcessImagingTask extends DefaultTask {
 	}
 	
 	protected boolean assertThatInputIsProper(something) {
-		return something instanceof ImagingProcess
+		return something instanceof MediaProcess
 	}
 	
-	protected void executeRelatedProcesses(something, String name, ImageMeta meta) {
+	protected void executeRelatedProcesses(something, String name, MediaMeta meta) {
 		processesDependingOn(something).each { process ->
 			executeProcess(process, name)
 		}
@@ -205,12 +205,12 @@ class ProcessImagingTask extends DefaultTask {
 		return processInfo
 	}
 	
-	protected def addAndConfigure(ImagingProcess process, Closure config) {
+	protected def addAndConfigure(MediaProcess process, Closure config) {
 		configure(process, config)
 		return add(process)
 	}
 	
-	protected def add(ImagingProcess process) {
+	protected def add(MediaProcess process) {
 		processes.add(process)
 		logger.info "Adding process ${process}"
 		return process

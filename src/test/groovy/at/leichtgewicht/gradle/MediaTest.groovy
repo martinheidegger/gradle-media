@@ -5,15 +5,15 @@ import static org.junit.Assert.*;
 import org.gradle.api.Project;
 import org.junit.Test;
 
-import at.leichtgewicht.gradle.task.ClearImagingTask;
-import at.leichtgewicht.gradle.task.ProcessImagingTask;
+import at.leichtgewicht.gradle.task.ClearMediaTask;
+import at.leichtgewicht.gradle.task.ProcessMediaTask;
 
-class ImagingTest extends AbstractProjectTest {
+class MediaTest extends AbstractProjectTest {
 	
 	@Test
 	void availableTasks() {
-		assertTaskExists("processImages", ProcessImagingTask)
-		assertTaskExists("clearImages", ClearImagingTask)
+		assertTaskExists("processMedia", ProcessMediaTask)
+		assertTaskExists("clearMedia", ClearMediaTask)
 	}
 	
 	private assertTaskExists(String taskName, Class<Object> clazz) {
@@ -28,7 +28,7 @@ class ImagingTest extends AbstractProjectTest {
 	void fullTest() {
 		boolean executed = false
 		Closure setup = {
-			task processImages {
+			task processMedia {
 				
 				def largeThumbs = resize {
 					name = 'l'
@@ -57,7 +57,7 @@ class ImagingTest extends AbstractProjectTest {
 					toJson = "data.json"
 				}
 			}
-			tasks.processImages.execute();
+			tasks.processMedia.execute();
 		}
 		setup.delegate = project
 		setup.call()

@@ -13,6 +13,6 @@ class AbstractProjectTest {
 		def builder = ProjectBuilder.builder();
 		builder.withProjectDir(new File('.'))
 		project = builder.build()
-		project.apply plugin: Imaging;
+		project.apply plugin: Media;
 	}
 }

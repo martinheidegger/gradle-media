@@ -5,10 +5,10 @@ import java.io.File;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 
-import at.leichtgewicht.gradle.ImageMeta;
-import at.leichtgewicht.gradle.ImagingProcess;
+import at.leichtgewicht.gradle.MediaMeta;
+import at.leichtgewicht.gradle.MediaProcess;
 
-class AbstractImagingProcess implements ImagingProcess {
+class AbstractMediaProcess implements MediaProcess {
 
 	private File[] _input;
 	
@@ -22,7 +22,7 @@ class AbstractImagingProcess implements ImagingProcess {
 	
 	
 	void setUp(Task parentTask) {}
-	void execute(Task parentTask, ImageMeta meta) {}
+	void execute(Task parentTask, MediaMeta meta) {}
 	void tearDown(Task parentTask) {}
 	String getName() { return null }
 }

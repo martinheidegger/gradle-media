@@ -9,8 +9,8 @@ class GridData {
 	def GridData(x, y, width, height, name) {
 		this.x = x
 		this.y = y
-		this.width = width
-		this.height = height
+		this.w = width
+		this.h = height
 		this.img = name
 	}
 }

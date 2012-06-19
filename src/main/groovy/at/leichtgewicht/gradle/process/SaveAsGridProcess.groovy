@@ -8,7 +8,7 @@ import java.io.File;
 
 import org.gradle.api.Task;
 
-import at.leichtgewicht.gradle.ImageMeta;
+import at.leichtgewicht.gradle.MediaMeta;
 import at.leichtgewicht.gradle.process.format.JpegFormat
 import at.leichtgewicht.gradle.util.FileUtil
 
@@ -34,7 +34,7 @@ class SaveAsGridProcess extends SaveProcess {
 	}
 	
 	@Override
-	public void execute(Task task, ImageMeta meta) {
+	public void execute(Task task, MediaMeta meta) {
 		if( !currentImage ) {
 			createImage(task)
 		}

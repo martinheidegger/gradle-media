@@ -9,9 +9,9 @@ import org.gradle.api.Task
 import com.mortennobel.imagescaling.Lanczos3Filter
 import com.mortennobel.imagescaling.ResampleOp;
 
-import at.leichtgewicht.gradle.ImageMeta;
+import at.leichtgewicht.gradle.MediaMeta;
 
-class ResizeProcess extends AbstractImagingProcess {
+class ResizeProcess extends AbstractMediaProcess {
 	
 	private static def logger = Logger.getLogger('ResizeProcess')
 	
@@ -75,7 +75,7 @@ class ResizeProcess extends AbstractImagingProcess {
 	}
 	
 	@Override
-	void execute(Task task, ImageMeta meta) {
+	void execute(Task task, MediaMeta meta) {
 		Image image = meta.lastImage
 		Size size = calculateSize(image.width, image.height)
 		if( size.width != image.width || size.height != image.height ) {

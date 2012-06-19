@@ -13,7 +13,7 @@ import org.apache.log4j.Logger;
 import static at.leichtgewicht.gradle.util.FileUtil.isFile;
 import static at.leichtgewicht.gradle.util.ImageUtil.getImage;
 
-class ImageMeta {
+class MediaMeta {
 	
 	private static def logger = Logger.getLogger('ImageMeta')
 	
