@@ -1,4 +1,7 @@
 build/**/*
 bin/**/*
+largeThumbs/*
+smallThumbs/*
 .gradle
 .groovy
+data.json
