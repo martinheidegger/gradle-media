@@ -28,36 +28,34 @@ class ImagingTest extends AbstractProjectTest {
 	void fullTest() {
 		boolean executed = false
 		Closure setup = {
-			tasks.processImages << {
+			task processImages {
 				
 				def largeThumbs = resize {
+					name = 'l'
 					width = 300
 				}
 				
 				def smallThumbs = resize {
+					name = 's'
 					input = largeThumbs // Faster than default input (because the largeThumbs will all have been loaded & resized already)
 					width = 150
 				}
 				
 				save {
 					input = largeThumbs
-					namePattern = {File file -> "largeThumbs/{file.name}.jpg"}
+					namePattern = {String name -> "largeThumbs/${name}.jpg"}
 				}
 				
 				saveAsGrid {
 					input = smallThumbs
 					maxWidth = 700
 					maxHeight = 300
-					namePattern = {File file -> "smallThumbs/{file.name}.jpg" }
-					outputFormat = JPEG({
-						quality = 75
-					})
-					info = 'smallThumbs.json'
+					namePattern = {int count -> "smallThumbs/img-${count}.jpg" }
 				}
 				
-//				clone {
-//					namePattern = {File file -> "original/{file.name}.jpg" }
-//				}
+				info {
+					toJson = "data.json"
+				}
 			}
 			tasks.processImages.execute();
 		}

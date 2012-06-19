@@ -12,24 +12,26 @@ import org.gradle.api.internal.file.collections.SimpleFileCollection
 import org.gradle.api.tasks.TaskAction
 import org.jgrapht.DirectedGraph
 import org.jgrapht.alg.CycleDetector
+import org.jgrapht.alg.BlockCutpointGraph.BCGEdge;
 import org.jgrapht.graph.DefaultDirectedGraph
 import org.jgrapht.graph.DefaultEdge
 
 import at.leichtgewicht.gradle.ImageMeta
 import at.leichtgewicht.gradle.ImagingProcess
-import at.leichtgewicht.gradle.process.CloneProcess
-import at.leichtgewicht.gradle.process.MoveProcess
+import at.leichtgewicht.gradle.process.ProcessInfo
 import at.leichtgewicht.gradle.process.ResizeProcess
 import at.leichtgewicht.gradle.process.SaveAsGridProcess
 import at.leichtgewicht.gradle.process.SaveProcess
 
 class ProcessImagingTask extends DefaultTask {
 	
-	private ArrayList<ImagingProcess> processes = new ArrayList<ImagingProcess>()
-	private DirectedGraph<Object, DefaultEdge> dependencyGraph = null
-	private static CycleDetector<Object, DefaultEdge> detector = new CycleDetector<Object, DefaultEdge>()
-	private Set<FileCollection> dataInput = null
-	private ImageMeta meta = new ImageMeta()
+	protected static CycleDetector<Object, DefaultEdge> detector = new CycleDetector<Object, DefaultEdge>()
+	
+	protected ArrayList<ImagingProcess> processes = new ArrayList<ImagingProcess>()
+	protected DirectedGraph<Object, DefaultEdge> dependencyGraph = null
+	protected Set<FileCollection> dataInput = null
+	protected ImageMeta meta = new ImageMeta()
+	protected ProcessInfo processInfo = new ProcessInfo()
 	
 	@TaskAction
 	def process() {
@@ -43,61 +45,65 @@ class ProcessImagingTask extends DefaultTask {
 		}
 	}
 	
-	private void setUp() {
+	protected void setUp() {
 		logger.info "Setting up all processes"
 		processes.each { process ->
-			process.setUp()
+			process.setUp(this)
 		}
 	}
 	
-	private void processFileTasks() {
+	protected void processFileTasks() {
 		logger.info "Starting ${dataInput.size()} root processes"
 		dataInput.each {
 			executeDataInput(it)
 		}
 	}
 	
-	private void tearDown() {
+	protected void tearDown() {
 		processes.each { process ->
-			process.tearDown()
+			process.tearDown(this)
 		}
 	}
 	
-	private boolean graphIsCycleFree() {
+	protected boolean graphIsCycleFree() {
 		detector.graph = dependencyGraph
 		return !detector.detectCycles()
 	}
 	
-	private Set<Object> allGraphEntries() {
+	protected Set<Object> allGraphEntries() {
 		return dependencyGraph.vertexSet()
 	}
 	
-	private void prepareGraph() {
+	protected void prepareGraph() {
 		clearGraph()
 		fillGraph()
 	}
 	
-	private void clearGraph() {
+	protected void clearGraph() {
 		dependencyGraph = new DefaultDirectedGraph<Object, DefaultEdge>(DefaultEdge.class);
 		dataInput = new HashSet<FileCollection>();
 	}
 	
-	private void fillGraph() {
-		logger.info "Found ${processes.size()} processes to work with"
+	protected void fillGraph() {
+		logger.debug "Found ${processes.size()} processes to work with"
 		processes.each { ImagingProcess process ->
 			def input = getInput(process)
-			if( input instanceof FileCollection ) {
-				dataInput.add(process.input)
+			if( input != null && input instanceof FileCollection ) {
+				dataInput.add(input)
 			}
-			dependencyGraph.addVertex(input)
-			dependencyGraph.addVertex(process)
-			dependencyGraph.addEdge(process, input)
+			if( !dependencyGraph.containsVertex(input)) {
+				dependencyGraph.addVertex(input)
+			}
+			if( !dependencyGraph.containsVertex(process)) {
+				dependencyGraph.addVertex(process)
+			}
+			dependencyGraph.addEdge(input, process)
 		}
 	}
 	
-	private def getInput(ImagingProcess process) {
-		if( process.input ) {
-			logger.info "Taking custom input for ${process}"
+	protected def getInput(ImagingProcess process) {
+		if( process.input != null ) {
+			logger.info "Taking custom input ${process.input} for ${process}"
 			return process.input
 		}
 		if( project.imaging.input ) {
@@ -105,37 +111,55 @@ class ProcessImagingTask extends DefaultTask {
 			return project.imaging.input
 		}
 		def folder = project.file('images')
-		def images = project.files('images/*')
+		def images = project.fileTree(dir: 'images', include: '**/*')
 		logger.info "Resetting input to convention folder ${folder.absolutePath}"
 		return images
 	}
 	
-	private def executeDataInput(FileCollection files) {
-		logger.info "Processing ${files.size()}"
+	protected def executeDataInput(FileCollection files) {
+		logger.info "Processing ${files}"
 		files.each { File file->
 			if(file.exists() && !file.isDirectory()) {
 				logger.info "Processing file ${file.name}"
 				meta.original = file
-				executeRelatedProcesses(files)
+				executeRelatedProcesses(files, file.name, meta)
+				processInfo.add(meta.clear())
 			}
 		}
-		meta.original = null
+		processInfo.process(this)
 	}
 	
-	private Set<Object> processesDependingOn(other) {
-		return dependencyGraph.edgesOf(other)
+	protected Set<Object> processesDependingOn(other) {
+		Set<DefaultEdge> edges = dependencyGraph.edgesOf(other)
+		Set<Object> depending = new HashSet<Object>();
+		edges.each {
+			def target = dependencyGraph.getEdgeTarget(it)
+			if( target != other ) {
+				depending.add( target)
+			}
+		}
+		logger.debug "Found ${depending.size()} depending targets"
+		return depending
 	}
 	
-	private def executeProcess(something) {
-		if( something instanceof ImagingProcess ) {
+	protected def executeProcess(something, String parentName) {
+		if( assertThatInputIsProper(something) ) {
 			ImagingProcess process = something
-			process.execute(meta)
+			meta.setLastName(parentName)
+			process.execute(this, meta)
+			executeRelatedProcesses(process, process.name != null ? process.name : parentName, meta)
+		} else {
+			logger.error "Process ${something} is not a valid process"
 		}
 	}
 	
-	private void executeRelatedProcesses(something) {
+	protected boolean assertThatInputIsProper(something) {
+		return something instanceof ImagingProcess
+	}
+	
+	protected void executeRelatedProcesses(something, String name, ImageMeta meta) {
 		processesDependingOn(something).each { process ->
-			executeProcess(process)
+			executeProcess(process, name)
 		}
 	}
 	
@@ -168,14 +192,6 @@ class ProcessImagingTask extends DefaultTask {
 		return addAndConfigure(new ResizeProcess(), config)
 	}
 	
-	CloneProcess clone(Closure config) {
-		return addAndConfigure(new CloneProcess(), config)
-	}
-	
-	MoveProcess move(Closure config) {
-		return addAndConfigure(new MoveProcess(), config)
-	}
-	
 	SaveProcess save(Closure config) {
 		return addAndConfigure(new SaveProcess(), config)
 	}
@@ -184,12 +200,17 @@ class ProcessImagingTask extends DefaultTask {
 		return addAndConfigure(new SaveAsGridProcess(), config)
 	}
 	
-	private def addAndConfigure(ImagingProcess process, Closure config) {
+	ProcessInfo info(Closure config) {
+		configure(processInfo, config)
+		return processInfo
+	}
+	
+	protected def addAndConfigure(ImagingProcess process, Closure config) {
 		configure(process, config)
 		return add(process)
 	}
 	
-	private def add(ImagingProcess process) {
+	protected def add(ImagingProcess process) {
 		processes.add(process)
 		logger.info "Adding process ${process}"
 		return process

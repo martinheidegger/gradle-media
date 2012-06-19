@@ -2,6 +2,9 @@ package at.leichtgewicht.gradle.process
 
 import java.io.File;
 
+import org.gradle.api.Project;
+import org.gradle.api.Task;
+
 import at.leichtgewicht.gradle.ImageMeta;
 import at.leichtgewicht.gradle.ImagingProcess;
 
@@ -17,16 +20,9 @@ class AbstractImagingProcess implements ImagingProcess {
 		return _input;
 	}
 	
-	void setUp() {
-		
-	}
 	
-	void execute(ImageMeta meta) {
-		
-	}
-	
-	void tearDown() {
-		
-	}
-
+	void setUp(Task parentTask) {}
+	void execute(Task parentTask, ImageMeta meta) {}
+	void tearDown(Task parentTask) {}
+	String getName() { return null }
 }

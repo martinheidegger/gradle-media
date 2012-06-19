@@ -10,7 +10,9 @@ class AbstractProjectTest {
 	
 	@Before
 	void setup() {
-		project = ProjectBuilder.builder().build()
+		def builder = ProjectBuilder.builder();
+		builder.withProjectDir(new File('.'))
+		project = builder.build()
 		project.apply plugin: Imaging;
 	}
 }
