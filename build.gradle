@@ -6,4 +6,4 @@ dependencies {
 	groovy localGroovy()
 }
 
-srcDirs = ['src/main/java', 'java-image-scaling-0.8.5.jar', 'lib/jgrapht-jdk1.5-0.7.3.jar']
+srcDirs = ['src/main/java', 'java-image-scaling-0.8.5.jar', 'lib/jgrapht-jdk1.5-0.7.3.jar', 'lib/jackson-core-2.0.2.jar', 'lib/jackson-databind-2.0.2.jar']
