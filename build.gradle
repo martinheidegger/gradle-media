@@ -1,9 +1,18 @@
 apply plugin: 'groovy'
-apply plugin: 'java'
 
 dependencies {
 	compile gradleApi()
 	groovy localGroovy()
 }
 
-srcDirs = ['src/main/java', 'java-image-scaling-0.8.5.jar', 'lib/jgrapht-jdk1.5-0.7.3.jar', 'lib/jackson-core-2.0.2.jar', 'lib/jackson-databind-2.0.2.jar']
+def jars = fileTree(dir: 'lib', include: '**/*')
+
+dependencies {
+	runtime jars
+}
+
+sourceSets {
+	main {
+		compileClasspath += jars
+	}
+}
