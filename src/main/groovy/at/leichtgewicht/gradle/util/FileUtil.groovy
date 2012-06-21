@@ -6,6 +6,7 @@ import java.io.File;
 
 import org.gradle.api.Task;
 import org.gradle.api.file.FileCollection
+import org.gradle.api.internal.file.collections.SimpleFileCollection;
 
 class FileUtil {
 	
@@ -26,6 +27,20 @@ class FileUtil {
 	
 	static final boolean createParentFolders(File file) {
 		return file.parentFile.mkdirs();
+	}
+	
+	static FileCollection resolveFiles(Task task, input, parameter) {
+		while( input != null ) {
+			if( input instanceof Closure ) {
+				input = executeClosure(input, parameter)
+			} else if( input instanceof FileCollection ) {
+				return input
+			} else if( input instanceof File) {
+				return new SimpleFileCollection(input)
+			} else {
+				return task.project.files(input)
+			}
+		}
 	}
 	
 	static File resolveFile(Task task, input, parameter) {

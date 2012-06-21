@@ -22,6 +22,7 @@ import at.leichtgewicht.gradle.process.ProcessInfo
 import at.leichtgewicht.gradle.process.ResizeProcess
 import at.leichtgewicht.gradle.process.SaveAsGridProcess
 import at.leichtgewicht.gradle.process.SaveProcess
+import at.leichtgewicht.gradle.util.FileUtil;
 
 class ProcessMediaTask extends DefaultTask {
 	
@@ -29,7 +30,7 @@ class ProcessMediaTask extends DefaultTask {
 	
 	protected ArrayList<MediaProcess> processes = new ArrayList<MediaProcess>()
 	protected DirectedGraph<Object, DefaultEdge> dependencyGraph = null
-	protected Set<FileCollection> dataInput = null
+	private FileCollection _input = null
 	protected MediaMeta meta = new MediaMeta()
 	protected ProcessInfo processInfo = new ProcessInfo()
 	
@@ -53,10 +54,17 @@ class ProcessMediaTask extends DefaultTask {
 	}
 	
 	protected void processFileTasks() {
-		logger.info "Starting ${dataInput.size()} root processes"
-		dataInput.each {
-			executeDataInput(it)
+		logger.info "Processing ${input}"
+		input.each { File file->
+			if(file.exists() && !file.isDirectory()) {
+				logger.info "Processing file ${file.name}"
+				meta.original = file
+				meta.setData('name', file.name)
+				executeRelatedProcesses(input, file.name, meta)
+				processInfo.add(meta.clear())
+			}
 		}
+		processInfo.process(this)
 	}
 	
 	protected void tearDown() {
@@ -81,52 +89,48 @@ class ProcessMediaTask extends DefaultTask {
 	
 	protected void clearGraph() {
 		dependencyGraph = new DefaultDirectedGraph<Object, DefaultEdge>(DefaultEdge.class);
-		dataInput = new HashSet<FileCollection>();
 	}
 	
 	protected void fillGraph() {
 		logger.debug "Found ${processes.size()} processes to work with"
 		processes.each { MediaProcess process ->
-			def input = getInput(process)
-			if( input != null && input instanceof FileCollection ) {
-				dataInput.add(input)
-			}
-			if( !dependencyGraph.containsVertex(input)) {
-				dependencyGraph.addVertex(input)
+			def processInput = getProcessInput(process, input)
+			if( !dependencyGraph.containsVertex(processInput)) {
+				dependencyGraph.addVertex(processInput)
 			}
 			if( !dependencyGraph.containsVertex(process)) {
 				dependencyGraph.addVertex(process)
 			}
-			dependencyGraph.addEdge(input, process)
+			dependencyGraph.addEdge(processInput, process)
 		}
 	}
 	
-	protected def getInput(MediaProcess process) {
+	protected void setInput(input) {
+		_input = FileUtil.resolveFiles(this, input, [this])
+	}
+	
+	protected FileCollection getInput() {
+		if( _input == null) {
+			if( project.media.input ) {
+				logger.info "Using Images from project.imaging setting"
+				_input = project.media.input
+			} else {
+				def folder = project.file('images')
+				def defaultCollection = project.fileTree(dir: 'images', include: '**/*')
+				logger.info "Resetting input to convention folder ${folder.absolutePath}"
+				_input = defaultCollection
+			}
+		}
+		return _input
+	}
+	
+	protected def getProcessInput(MediaProcess process, FileCollection defaultInput) {
 		if( process.input != null ) {
 			logger.info "Taking custom input ${process.input} for ${process}"
 			return process.input
+		} else {
+			return defaultInput
 		}
-		if( project.media.input ) {
-			logger.info "Using Images from project.imaging setting"
-			return project.media.input
-		}
-		def folder = project.file('images')
-		def images = project.fileTree(dir: 'images', include: '**/*')
-		logger.info "Resetting input to convention folder ${folder.absolutePath}"
-		return images
-	}
-	
-	protected def executeDataInput(FileCollection files) {
-		logger.info "Processing ${files}"
-		files.each { File file->
-			if(file.exists() && !file.isDirectory()) {
-				logger.info "Processing file ${file.name}"
-				meta.original = file
-				executeRelatedProcesses(files, file.name, meta)
-				processInfo.add(meta.clear())
-			}
-		}
-		processInfo.process(this)
 	}
 	
 	protected Set<Object> processesDependingOn(other) {
@@ -146,8 +150,10 @@ class ProcessMediaTask extends DefaultTask {
 		if( assertThatInputIsProper(something) ) {
 			MediaProcess process = something
 			meta.setLastName(parentName)
+			def img = meta.processedImage
 			process.execute(this, meta)
 			executeRelatedProcesses(process, process.name != null ? process.name : parentName, meta)
+			meta.processedImage = img
 		} else {
 			logger.error "Process ${something} is not a valid process"
 		}

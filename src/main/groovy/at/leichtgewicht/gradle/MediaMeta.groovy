@@ -29,6 +29,10 @@ class MediaMeta {
 		return _lastImage != null ? _lastImage : getOriginalData() 
 	}
 	
+	Image getProcessedImage() {
+		return _lastImage
+	}
+	
 	void setProcessedImage(Image image) {
 		_lastImage = image;
 	}
@@ -47,16 +51,16 @@ class MediaMeta {
 	}
 	
 	Map<String, Object> clear() {
-		_original = null;
+		def tempData = _data
+		_original = null
 		if( _originalData ) {
 			_originalData.flush()
+			_originalData = null
 		}
-		_originalData = null
 		if( _lastImage ) {
 			_lastImage.flush()
+			_lastImage = null
 		}
-		_lastImage = null
-		def tempData = _data
 		_data = new HashMap<String, Object>()
 		return tempData
 	}
