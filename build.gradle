@@ -1,18 +1,75 @@
 apply plugin: 'groovy'
+apply plugin: 'maven'
+
+group = 'at.leichtgewicht'
+version = '0'
+ext.packaging = 'jar'
+def jars = fileTree(dir: 'lib', include: '**/*')
+
+repositories {
+	mavenCentral()
+}
 
 dependencies {
 	compile gradleApi()
 	groovy localGroovy()
 }
 
-def jars = fileTree(dir: 'lib', include: '**/*')
-
 dependencies {
 	runtime jars
+}
+
+jar {
+	into('.') {
+		jars.each { jar -> from zipTree(jar) }
+	}
 }
 
 sourceSets {
 	main {
 		compileClasspath += jars
+	}
+}
+
+def sonatypeUsername
+def sonatypePassword
+
+uploadArchives {
+	repositories {
+		mavenDeployer {
+			beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+			
+			repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+				authentication(userName: sonatypeUsername, password: sonatypePassword)
+			}
+			
+			pom.project {
+				name 'GradleMedia'
+				packaging 'jar'
+				description 'GradleMedia is a Gradle plugin for processing media files like images/videos/audio files'
+				url 'https://github.com/martinheidegger/gradle-media'
+				
+				scm {
+					url 'scm:git@github.com:martinheidegger/gradle-media.git'
+					connection 'scm:git@github.com:martinheidegger/gradle-media.git'
+					developerConnection 'scm:git@github.com:martinheidegger/gradle-media.git'
+				}
+				
+				licenses {
+					license {
+						name 'GNU Lesser general public license'
+						url 'http://www.gnu.org/licenses/lgpl.html'
+						distribution 'repo'
+					}
+				}
+				
+				developers {
+					developer {
+						id 'martinheidegger'
+						name 'Martin Heidegger'
+					}
+				}
+			}
+		}
 	}
 }
