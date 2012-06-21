@@ -43,6 +43,7 @@ class SaveProcess extends AbstractMediaProcess implements MediaProcess {
 	public void execute(Task task, MediaMeta meta) {
 		
 		File file = prepareFile(task, meta)
+		
 		JpegFormat format = getOutputFormat(meta, file.name)
 		
 		meta.setData(meta.lastName, FileUtil.getRelativePath(file))
@@ -51,8 +52,14 @@ class SaveProcess extends AbstractMediaProcess implements MediaProcess {
 	}
 	
 	protected File prepareFile(Task task, MediaMeta meta) {
-		File file = resolveFile(task, meta)
+		return prepareFile( resolveFile(task, meta) )
+	}
+	
+	protected File prepareFile(File file) {
 		file.parentFile.mkdirs()
+		if( file.exists() ) {
+			file.delete()
+		}
 		return file
 	}
 	

@@ -106,7 +106,7 @@ class SaveAsGridProcess extends SaveProcess {
 			placeImage(temp)
 			temp.flush()
 		}
-		currentFile.parentFile.mkdirs()
+		prepareFile(currentFile)
 		
 		saveFile(currentFormat, currentImage, currentFile)
 		
