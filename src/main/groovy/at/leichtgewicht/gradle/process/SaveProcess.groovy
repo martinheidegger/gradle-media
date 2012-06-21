@@ -25,7 +25,7 @@ class SaveProcess extends AbstractMediaProcess implements MediaProcess {
 	private static def logger = Logger.getLogger('SaveProcess')
 	
 	def input = null
-	def outputFormat = null
+	def format = JPEG()
 	Closure namePattern
 	
 	protected def count = 0
@@ -81,6 +81,6 @@ class SaveProcess extends AbstractMediaProcess implements MediaProcess {
 	}
 	
 	protected JpegFormat getOutputFormat(meta, fileName) {
-		return outputFormat ? outputFormat : JPEG()
+		return format ? format : JPEG()
 	}
 }

@@ -6,7 +6,7 @@ import javax.imageio.ImageWriter
 import javax.imageio.plugins.jpeg.JPEGImageWriteParam
 
 class JpegFormat {
-	float quality = 1
+	float quality = 0.75
 	
 	ImageWriteParam getParam() {
 		JPEGImageWriteParam param = writer.getDefaultWriteParam()
